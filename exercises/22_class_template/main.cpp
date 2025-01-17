@@ -1,5 +1,7 @@
 ﻿#include "../exercise.h"
 
+#include <cstring>
+
 // READ: 类模板 <https://zh.cppreference.com/w/cpp/language/class_template>
 
 template<class T>
@@ -10,6 +12,10 @@ struct Tensor4D {
     Tensor4D(unsigned int const shape_[4], T const *data_) {
         unsigned int size = 1;
         // TODO: 填入正确的 shape 并计算 size
+        for (auto i = 0u; i < 4; ++i) {
+            shape[i] = shape_[i];
+            size *= shape[i];
+        }
         data = new T[size];
         std::memcpy(data, data_, size * sizeof(T));
     }
@@ -28,6 +34,25 @@ struct Tensor4D {
     // 则 `this` 与 `others` 相加时，3 个形状为 `[1, 2, 1, 4]` 的子张量各自与 `others` 对应项相加。
     Tensor4D &operator+=(Tensor4D const &others) {
         // TODO: 实现单向广播的加法
+        for (auto i = 0u; i < this->shape[0]; ++i) {
+            for (auto j = 0u; j < this->shape[1]; ++j) {
+                for (auto k = 0u; k < this->shape[2]; ++k) {
+                    for (auto l = 0u; l < this->shape[3]; ++l) {
+                        if (others.shape[0] == 1) {
+                            this->data[i * this->shape[1] * this->shape[2] * this->shape[3] + j * this->shape[2] * this->shape[3] + k * this->shape[3] + l] += others.data[l];
+                        } else if (others.shape[1] == 1) {
+                            this->data[i * this->shape[1] * this->shape[2] * this->shape[3] + j * this->shape[2] * this->shape[3] + k * this->shape[3] + l] += others.data[j * others.shape[3] + l];
+                        } else if (others.shape[2] == 1) {
+                            this->data[i * this->shape[1] * this->shape[2] * this->shape[3] + j * this->shape[2] * this->shape[3] + k * this->shape[3] + l] += others.data[i * this->shape[1] * this->shape[3] + j * this->shape[3] + l];
+                        } else if (others.shape[3] == 1) {
+                            this->data[i * this->shape[1] * this->shape[2] * this->shape[3] + j * this->shape[2] * this->shape[3] + k * this->shape[3] + l] += others.data[i * this->shape[1] * this->shape[2] * this->shape[3] + j * this->shape[2] * this->shape[3] + k];
+                        } else {
+                            this->data[i * this->shape[1] * this->shape[2] * this->shape[3] + j * this->shape[2] * this->shape[3] + k * this->shape[3] + l] += others.data[i * others.shape[1] * others.shape[2] * others.shape[3] + j * others.shape[2] * others.shape[3] + k * others.shape[3] + l];
+                        }
+                    }
+                }
+            }
+        }
         return *this;
     }
 };
